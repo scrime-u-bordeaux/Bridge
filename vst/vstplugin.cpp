@@ -17,11 +17,7 @@ struct BridgeEffect : public AudioEffectX {
 	bool lastPlaying = false;
 
 	BridgeEffect(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, 1 + BRIDGE_NUM_PARAMS) {
-#if INSTRUMENT
 		isSynth(true);
-		// setNumInputs(0);
-#else
-#endif
 		setNumInputs(BRIDGE_INPUTS);
 		setNumOutputs(BRIDGE_OUTPUTS);
 
@@ -36,20 +32,15 @@ struct BridgeEffect : public AudioEffectX {
 	}
 
 	void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) override {
-		// Check for clock pulse
 		VstTimeInfo *timeInfo = getTimeInfo(0);
 		// log("%f %x", timeInfo->ppqPos, timeInfo->flags);
-		if (timeInfo->flags & kVstPpqPosValid) {
-			int ppq = (int) floor(timeInfo->ppqPos * 24);
-			if (ppq != lastPpq) {
-				client->pushClock();
-			}
-			lastPpq = ppq;
-		}
-		// Check if transport has changed
+		// if (timeInfo->flags & kVstPpqPosValid == 0)
+		// 	log("Host does not set PPQ in VstTimeInfo. Clocks and transport may be incorrect.")
+
+		// MIDI transport
 		bool playing = (timeInfo->flags & kVstTransportPlaying) != 0;
 		if (playing && !lastPlaying) {
-			if ((timeInfo->flags & kVstPpqPosValid) && timeInfo->ppqPos == 0.0)
+			if (timeInfo->ppqPos == 0.f)
 				client->pushStart();
 			client->pushContinue();
 		}
@@ -57,6 +48,25 @@ struct BridgeEffect : public AudioEffectX {
 			client->pushStop();
 		}
 		lastPlaying = playing;
+
+		// MIDI clock
+		if (timeInfo->flags & kVstTransportChanged)
+			lastPpq = INT_MIN;
+
+		if (playing) {
+			int ppq = (int) floor(timeInfo->ppqPos * 24);
+			if (lastPpq == INT_MIN) {
+				// One clock when transport is changed (e.g. started)
+				client->pushClock();
+			}
+			else if (ppq != lastPpq) {
+				// Insert a clock for every 24PPQ tick we've passed in the host transport
+				int clocks = clamp(ppq - lastPpq, 1, 64);
+				for (int i = 0; i < clocks; i++)
+					client->pushClock();
+			}
+			lastPpq = ppq;
+		}
 
 		// Interleave samples
 		float input[BRIDGE_INPUTS * sampleFrames];

@@ -6,15 +6,6 @@ include $(RACK_DIR)/arch.mk
 VST2_SDK ?= VST2_SDK
 TARGET := VCV-Bridge
 
-TYPE ?= effect
-
-ifeq ($(TYPE), instrument)
-	FLAGS += -DINSTRUMENT
-	TARGET := $(TARGET)-Instrument
-else
-	FLAGS += -DEFFECT
-endif
-
 FLAGS += -fPIC
 FLAGS += -I$(VST2_SDK) -I$(RACK_DIR)/include
 
@@ -52,11 +43,7 @@ ifeq ($(ARCH), mac)
 	mkdir -p dist
 	mkdir -p dist/$(BUNDLE)/Contents
 	mkdir -p dist/$(BUNDLE)/Contents/MacOS
-ifeq ($(TYPE), instrument)
-	cp Info-Instrument.plist dist/$(BUNDLE)/Contents/Info.plist
-else
 	cp Info.plist dist/$(BUNDLE)/Contents/Info.plist
-endif
 	cp PkgInfo dist/$(BUNDLE)/Contents/
 	cp $(TARGET) dist/$(BUNDLE)/Contents/MacOS/
 	strip -S dist/$(BUNDLE)/Contents/MacOS/$(TARGET)
