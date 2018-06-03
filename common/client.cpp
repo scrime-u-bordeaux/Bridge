@@ -73,7 +73,7 @@ struct BridgeClient {
 		initialize();
 		while (running) {
 			// Wait before connecting or reconnecting
-			std::this_thread::sleep_for(std::chrono::duration<double>(0.1));
+			std::this_thread::sleep_for(std::chrono::duration<double>(0.25));
 			// Connect
 			connect();
 			if (server < 0)
@@ -83,7 +83,7 @@ struct BridgeClient {
 			ready = true;
 			// Wait for server to disconnect
 			while (running && ready) {
-				std::this_thread::sleep_for(std::chrono::duration<double>(0.1));
+				std::this_thread::sleep_for(std::chrono::duration<double>(0.25));
 			}
 			disconnect();
 			log("client disconnected");

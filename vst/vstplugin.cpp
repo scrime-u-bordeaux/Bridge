@@ -11,12 +11,11 @@
 #include "../common/client.cpp"
 
 
-struct BridgeEffect : public AudioEffectX {
+struct BridgeVST : public AudioEffectX {
 	BridgeClient *client;
-	int lastPpq = -1;
 	bool lastPlaying = false;
 
-	BridgeEffect(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, 1 + BRIDGE_NUM_PARAMS) {
+	BridgeVST(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, 1 + BRIDGE_NUM_PARAMS) {
 		isSynth(true);
 		setNumInputs(BRIDGE_INPUTS);
 		setNumOutputs(BRIDGE_OUTPUTS);
@@ -27,7 +26,7 @@ struct BridgeEffect : public AudioEffectX {
 		client = new BridgeClient();
 	}
 
-	~BridgeEffect() {
+	~BridgeVST() {
 		delete client;
 	}
 
@@ -40,7 +39,7 @@ struct BridgeEffect : public AudioEffectX {
 		// MIDI transport
 		bool playing = (timeInfo->flags & kVstTransportPlaying) != 0;
 		if (playing && !lastPlaying) {
-			if (timeInfo->ppqPos == 0.f)
+			if (timeInfo->ppqPos == 0.0)
 				client->pushStart();
 			client->pushContinue();
 		}
@@ -50,22 +49,14 @@ struct BridgeEffect : public AudioEffectX {
 		lastPlaying = playing;
 
 		// MIDI clock
-		if (timeInfo->flags & kVstTransportChanged)
-			lastPpq = INT_MIN;
-
 		if (playing) {
-			int ppq = (int) floor(timeInfo->ppqPos * 24);
-			if (lastPpq == INT_MIN) {
-				// One clock when transport is changed (e.g. started)
+			double timeDuration = sampleFrames / timeInfo->sampleRate;
+			double ppqDuration = timeDuration * (timeInfo->tempo / 60.0) * 24;
+			int ppqStart = (int) ceil(timeInfo->ppqPos * 24);
+			int ppqEnd = (int) ceil(timeInfo->ppqPos * 24 + ppqDuration);
+			for (int ppqIndex = ppqStart; ppqIndex < ppqEnd; ppqIndex++) {
 				client->pushClock();
 			}
-			else if (ppq != lastPpq) {
-				// Insert a clock for every 24PPQ tick we've passed in the host transport
-				int clocks = clamp(ppq - lastPpq, 1, 64);
-				for (int i = 0; i < clocks; i++)
-					client->pushClock();
-			}
-			lastPpq = ppq;
 		}
 
 		// Interleave samples
@@ -191,5 +182,5 @@ struct BridgeEffect : public AudioEffectX {
 
 
 AudioEffect *createEffectInstance (audioMasterCallback audioMaster) {
-	return new BridgeEffect(audioMaster);
+	return new BridgeVST(audioMaster);
 }
