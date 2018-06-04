@@ -11,10 +11,12 @@
 #include "../common/client.cpp"
 
 
-struct BridgeVST : public AudioEffectX {
+class BridgeVST : public AudioEffectX {
+private:
 	BridgeClient *client;
 	bool lastPlaying = false;
 
+public:
 	BridgeVST(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, 1 + BRIDGE_NUM_PARAMS) {
 		isSynth(true);
 		setNumInputs(BRIDGE_INPUTS);

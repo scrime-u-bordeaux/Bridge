@@ -24,7 +24,7 @@ $(error The VST plugin is not available for Linux at this time. If you've built 
 endif
 
 
-SOURCES += vstplugin.cpp
+SOURCES += BridgeVST.cpp
 SOURCES += $(VST2_SDK)/public.sdk/source/vst2.x/audioeffect.cpp
 SOURCES += $(VST2_SDK)/public.sdk/source/vst2.x/audioeffectx.cpp
 SOURCES += $(VST2_SDK)/public.sdk/source/vst2.x/vstplugmain.cpp
