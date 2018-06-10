@@ -98,39 +98,41 @@ struct BridgeAU : public AUMIDIEffectBase {
 		return kAudioUnitErr_InvalidParameter;
 	}
 
-	OSStatus ProcessBufferLists(AudioUnitRenderActionFlags &ioActionFlags, const AudioBufferList &inBuffer, AudioBufferList &outBuffer, UInt32 inFramesToProcess) override {
+	OSStatus ProcessBufferLists(AudioUnitRenderActionFlags &ioActionFlags, const AudioBufferList &inBufferList, AudioBufferList &outBufferList, UInt32 inFramesToProcess) override {
 		double beat;
 		double tempo;
 		if (!CallHostBeatAndTempo(&beat, &tempo)) {
-			printf("%f %f\n", beat, tempo);
+			// printf("%f %f\n", beat, tempo);
 		}
 
 		// Set sample rate
-		client->setSampleRate((int) GetOutput(0)->GetStreamFormat().mSampleRate);
+		// client->setSampleRate((int) GetOutput(0)->GetStreamFormat().mSampleRate);
 
 		// TODO Check that the stream is Float32, add better error handling.
-		float input[BRIDGE_INPUTS * inFramesToProcess];
-		float output[BRIDGE_OUTPUTS * inFramesToProcess];
+		float input[inFramesToProcess * BRIDGE_INPUTS];
+		float output[inFramesToProcess * BRIDGE_OUTPUTS];
 		memset(input, 0, sizeof(input));
 		memset(output, 0, sizeof(output));
 		// Interleave input
-		for (int c = 0; c < (int) inBuffer.mNumberBuffers; c++) {
-			const float *buffer = (const float*) inBuffer.mBuffers[c].mData;
+		for (int c = 0; c < (int) inBufferList.mNumberBuffers; c++) {
+			const float *buffer = (const float*) inBufferList.mBuffers[c].mData;
 			for (int i = 0; i < (int) inFramesToProcess; i++) {
-				input[BRIDGE_INPUTS * i + c] = buffer[i];
+				input[i * BRIDGE_INPUTS + c] = buffer[i];
 			}
 		}
 		// Process audio
-		client->processStream(input, output, inFramesToProcess);
+		// client->processStream(input, output, inFramesToProcess);
 		// Deinterleave output
-		for (int c = 0; c < (int) outBuffer.mNumberBuffers; c++) {
-			float *buffer = (float*) outBuffer.mBuffers[c].mData;
+		if (outBufferList.mNumberBuffers >= 1) {
+			AudioBuffer &outBuffer = outBufferList.mBuffers[0];
+			float *buffer = (float*) outBuffer.mData;
 			for (int i = 0; i < (int) inFramesToProcess; i++) {
-				float r = (float) rand() / RAND_MAX;
-				buffer[i] = output[BRIDGE_OUTPUTS * i + c] + (r * 2.f - 1.f);
+				for (int c = 0; c < (int) outBuffer.mNumberChannels; c++) {
+					float r = (float) rand() / RAND_MAX;
+					buffer[i * outBuffer.mNumberChannels + c] = output[i * BRIDGE_OUTPUTS + c] + (r * 2.f - 1.f);
+				}
 			}
 		}
-		printf("%d\n", inFramesToProcess);
 		return noErr;
 	}
 
