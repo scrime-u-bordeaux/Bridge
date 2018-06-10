@@ -20,7 +20,9 @@ ifeq ($(ARCH), win)
 	TARGET := $(TARGET).dll
 endif
 ifeq ($(ARCH), lin)
-$(error The VST plugin is not available for Linux at this time. If you've built Linux VSTs before, you're welcome to contribute to the build system)
+	FLAGS += -D__cdecl=""
+	LDFLAGS += -lpthread -shared
+	TARGET := $(TARGET).so
 endif
 
 
@@ -55,6 +57,12 @@ ifeq ($(ARCH), win)
 	strip -s dist/$(TARGET)
 	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-VST.zip $(TARGET)
 endif
+ifeq ($(ARCH), lin)
+	mkdir -p dist
+	cp $(TARGET) dist/
+	strip -s dist/$(TARGET)
+	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-VST.zip $(TARGET)
+endif
 
 install: dist
 ifeq ($(ARCH), mac)
@@ -64,11 +72,19 @@ ifeq ($(ARCH), win)
 	mkdir -p /c/Program\ Files/Steinberg/VstPlugins
 	cp -R dist/$(TARGET) /c/Program\ Files/Steinberg/VstPlugins/
 endif
+ifeq ($(ARCH), lin)
+	mkdir -p ~/.vst/
+	cp -R dist/$(TARGET) ~/.vst
+endif
 
 uninstall:
 ifeq ($(ARCH), mac)
 	sudo rm -rfv /Library/Audio/Plug-Ins/VST/$(BUNDLE)
 endif
+ifeq ($(ARCH), lin)
+	rm -f /.vst/$(TARGET)
+endif
+
 
 run: install
 ifeq ($(ARCH), win)
