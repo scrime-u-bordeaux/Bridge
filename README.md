@@ -16,7 +16,9 @@ Run `make dist` in each desired directory. The plugins are placed in `dist/`.
 
 ### Linux
 
-The VST plugin has been successfully tested on Ubuntu 16.04 with several DAWs: Ardour (5.12), Bitwig Studio (2.3), Qtractor (0.8.4). However it might behave poorly if the host does not use an audio buffer with a fixed size (i.e. Renoise 3.1.0, Radium, 5.4.9). In Carla (2.0-beta6), "Fixed-size buffer" has to be enabled in the plugin's options. 
+The VST plugin has been successfully tested on Ubuntu 16.04 with several DAWs: Ardour (5.12), Bitwig Studio (2.3), Qtractor (0.8.4).
+However it might behave poorly if the host does not use an audio buffer with a fixed size (i.e. Renoise 3.1.0, Radium, 5.4.9).
+In Carla (2.0-beta6), "Fixed-size buffer" has to be enabled in the plugin's options.
 
 ## License
 

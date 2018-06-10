@@ -9,17 +9,17 @@ TARGET := VCV-Bridge
 FLAGS += -fPIC
 FLAGS += -I$(VST2_SDK) -I$(RACK_DIR)/include
 
-ifeq ($(ARCH), mac)
+ifdef ARCH_MAC
 	FLAGS += -arch i386 -arch x86_64
 	LDFLAGS += -arch i386 -arch x86_64
 	LDFLAGS += -bundle
 	BUNDLE := $(TARGET).vst
 endif
-ifeq ($(ARCH), win)
+ifdef ARCH_WIN
 	LDFLAGS += -shared -static -lws2_32
 	TARGET := $(TARGET).dll
 endif
-ifeq ($(ARCH), lin)
+ifdef ARCH_LIN
 	FLAGS += -D__cdecl=""
 	LDFLAGS += -lpthread -shared
 	TARGET := $(TARGET).so
@@ -41,7 +41,7 @@ clean:
 
 dist: all
 	rm -rf dist
-ifeq ($(ARCH), mac)
+ifdef ARCH_MAC
 	mkdir -p dist
 	mkdir -p dist/$(BUNDLE)/Contents
 	mkdir -p dist/$(BUNDLE)/Contents/MacOS
@@ -51,13 +51,13 @@ ifeq ($(ARCH), mac)
 	strip -S dist/$(BUNDLE)/Contents/MacOS/$(TARGET)
 	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-VST.zip $(BUNDLE)
 endif
-ifeq ($(ARCH), win)
+ifdef ARCH_WIN
 	mkdir -p dist
 	cp $(TARGET) dist/
 	strip -s dist/$(TARGET)
 	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-VST.zip $(TARGET)
 endif
-ifeq ($(ARCH), lin)
+ifdef ARCH_LIN
 	mkdir -p dist
 	cp $(TARGET) dist/
 	strip -s dist/$(TARGET)
@@ -65,28 +65,25 @@ ifeq ($(ARCH), lin)
 endif
 
 install: dist
-ifeq ($(ARCH), mac)
-	sudo cp -R dist/$(BUNDLE) /Library/Audio/Plug-Ins/VST/
+ifdef ARCH_MAC
+	cp -R dist/$(BUNDLE) /Library/Audio/Plug-Ins/VST/
 endif
-ifeq ($(ARCH), win)
+ifdef ARCH_WIN
 	mkdir -p /c/Program\ Files/Steinberg/VstPlugins
-	cp -R dist/$(TARGET) /c/Program\ Files/Steinberg/VstPlugins/
+	cp dist/$(TARGET) /c/Program\ Files/Steinberg/VstPlugins/
 endif
-ifeq ($(ARCH), lin)
-	mkdir -p ~/.vst/
-	cp -R dist/$(TARGET) ~/.vst
+ifdef ARCH_LIN
+	mkdir -p /usr/lib/vst
+	cp dist/$(TARGET) /usr/lib/vst/
 endif
 
 uninstall:
-ifeq ($(ARCH), mac)
-	sudo rm -rfv /Library/Audio/Plug-Ins/VST/$(BUNDLE)
+ifdef ARCH_MAC
+	rm -rfv /Library/Audio/Plug-Ins/VST/$(BUNDLE)
 endif
-ifeq ($(ARCH), lin)
-	rm -f /.vst/$(TARGET)
+ifdef ARCH_WIN
+	rm /c/Program\ Files/Steinberg/VstPlugins/$(TARGET)
 endif
-
-
-run: install
-ifeq ($(ARCH), win)
-	/c/Program\ Files/REAPER\ \(x64\)/reaper
+ifdef ARCH_LIN
+	rm /usr/lib/vst/$(TARGET)
 endif
