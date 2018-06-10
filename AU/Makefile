@@ -25,20 +25,17 @@ SOURCES += $(AU_SDK)/AUPublic/AUBase/AUOutputElement.cpp
 SOURCES += $(AU_SDK)/AUPublic/AUBase/AUScopeElement.cpp
 SOURCES += $(AU_SDK)/AUPublic/AUBase/ComponentBase.cpp
 SOURCES += $(AU_SDK)/AUPublic/OtherBases/AUMIDIBase.cpp
-SOURCES += $(AU_SDK)/AUPublic/OtherBases/MusicDeviceBase.cpp
+SOURCES += $(AU_SDK)/AUPublic/OtherBases/AUMIDIEffectBase.cpp
+SOURCES += $(AU_SDK)/AUPublic/OtherBases/AUEffectBase.cpp
 SOURCES += $(AU_SDK)/AUPublic/Utility/AUBuffer.cpp
-SOURCES += $(AU_SDK)/AUPublic/AUInstrumentBase/AUInstrumentBase.cpp
 SOURCES += $(AU_SDK)/PublicUtility/CAHostTimeBase.cpp
-SOURCES += $(AU_SDK)/AUPublic/AUInstrumentBase/SynthElement.cpp
-SOURCES += $(AU_SDK)/AUPublic/AUInstrumentBase/SynthNote.cpp
-SOURCES += $(AU_SDK)/AUPublic/AUInstrumentBase/SynthNoteList.cpp
 SOURCES += $(AU_SDK)/PublicUtility/CAAudioChannelLayout.cpp
 SOURCES += $(AU_SDK)/PublicUtility/CAStreamBasicDescription.cpp
 SOURCES += $(AU_SDK)/PublicUtility/CAVectorUnit.cpp
-SOURCES += $(AU_SDK)/PublicUtility/CAAUMIDIMap.cpp
-SOURCES += $(AU_SDK)/PublicUtility/CAAUMIDIMapManager.cpp
-SOURCES += $(AU_SDK)/AUPublic/Utility/AUBaseHelper.cpp
-SOURCES += $(AU_SDK)/PublicUtility/CABufferList.cpp
+# SOURCES += $(AU_SDK)/PublicUtility/CAAUMIDIMap.cpp
+# SOURCES += $(AU_SDK)/PublicUtility/CAAUMIDIMapManager.cpp
+# SOURCES += $(AU_SDK)/AUPublic/Utility/AUBaseHelper.cpp
+# SOURCES += $(AU_SDK)/PublicUtility/CABufferList.cpp
 SOURCES += $(AU_SDK)/AUPublic/AUBase/AUPlugInDispatch.cpp
 SOURCES += $(AU_SDK)/AUPublic/AUBase/AUDispatch.cpp
 
@@ -70,4 +67,4 @@ uninstall:
 	sudo rm -rfv /Library/Audio/Plug-Ins/Components/$(BUNDLE)
 
 val: install
-	auval -v aumu BRDG VCV_ -strict -de
+	auval -v aumf BRDG VCV_ -strict -de
