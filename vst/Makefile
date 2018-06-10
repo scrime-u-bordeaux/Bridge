@@ -47,13 +47,13 @@ ifeq ($(ARCH), mac)
 	cp PkgInfo dist/$(BUNDLE)/Contents/
 	cp $(TARGET) dist/$(BUNDLE)/Contents/MacOS/
 	strip -S dist/$(BUNDLE)/Contents/MacOS/$(TARGET)
-	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-vst.zip $(BUNDLE)
+	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-VST.zip $(BUNDLE)
 endif
 ifeq ($(ARCH), win)
 	mkdir -p dist
 	cp $(TARGET) dist/
 	strip -s dist/$(TARGET)
-	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-vst.zip $(TARGET)
+	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-VST.zip $(TARGET)
 endif
 
 install: dist

@@ -8,7 +8,7 @@
 			<key>description</key>
 			<string>VCV Bridge</string>
 			<key>factoryFunction</key>
-			<string>BridgeEffectFactory</string>
+			<string>BridgeAUFactory</string>
 			<key>manufacturer</key>
 			<string>VCV_</string>
 			<key>name</key>
@@ -16,7 +16,7 @@
 			<key>subtype</key>
 			<string>BRDG</string>
 			<key>type</key>
-			<string>aufx</string>
+			<string>aumu</string>
 			<key>version</key>
 			<integer>65536</integer>
 		</dict>
