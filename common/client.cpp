@@ -239,7 +239,6 @@ struct BridgeClient {
 		msg[1] = i;
 		msg[2] = roundf(params[i] * 0x7f);
 		send(msg, 3);
-		flush();
 	}
 
 	void sendMidi() {
@@ -357,7 +356,7 @@ struct BridgeClient {
 			log("send() failed");
 			return;
 		}
-		// flush();
+		flush();
 
 		// Receive audio
 		if (!recv(output, BRIDGE_OUTPUTS * frames * sizeof(float))) {
