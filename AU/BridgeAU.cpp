@@ -7,6 +7,7 @@
 
 struct BridgeAU : public AUMIDIEffectBase {
 	BridgeClient *client;
+	bool lastPlaying = false;
 
 	BridgeAU(AudioUnit component) : AUMIDIEffectBase(component) {
 		CreateElements();
@@ -99,40 +100,71 @@ struct BridgeAU : public AUMIDIEffectBase {
 	}
 
 	OSStatus ProcessBufferLists(AudioUnitRenderActionFlags &ioActionFlags, const AudioBufferList &inBufferList, AudioBufferList &outBufferList, UInt32 inFramesToProcess) override {
-		double beat;
-		double tempo;
-		if (!CallHostBeatAndTempo(&beat, &tempo)) {
-			// printf("%f %f\n", beat, tempo);
+		// Get host infomation
+		Float64 sampleRate = GetOutput(0)->GetStreamFormat().mSampleRate;
+		Float64 beat;
+		Float64 tempo;
+		Boolean isPlaying;
+		Boolean transportStateChanged;
+		Float64 currentSampleInTimeLine;
+		Boolean isCycling;
+		Float64 cycleStartBeat;
+		Float64 cycleEndBeat;
+		if (!CallHostBeatAndTempo(&beat, &tempo) && !CallHostTransportState(&isPlaying, &transportStateChanged, &currentSampleInTimeLine, &isCycling, &cycleStartBeat, &cycleEndBeat)) {
+			// printf("%f %f ", beat, tempo);
+			// printf("%d %d %f %d %f %f\n", isPlaying, transportStateChanged, currentSampleInTimeLine, isCycling, cycleStartBeat, cycleEndBeat);
+
+			// MIDI transport
+			if (isPlaying && !lastPlaying) {
+				if (beat == 0.0)
+					client->pushStart();
+				client->pushContinue();
+			}
+			if (!isPlaying && lastPlaying) {
+				client->pushStop();
+			}
+			lastPlaying = isPlaying;
+
+			// MIDI clock
+			if (isPlaying) {
+				double timeDuration = inFramesToProcess / sampleRate;
+				double ppqDuration = timeDuration * (tempo / 60.0) * 24;
+				int ppqStart = (int) ceil(beat * 24);
+				int ppqEnd = (int) ceil(beat * 24 + ppqDuration);
+				for (int ppqIndex = ppqStart; ppqIndex < ppqEnd; ppqIndex++) {
+					client->pushClock();
+				}
+			}
 		}
 
 		// Set sample rate
-		// client->setSampleRate((int) GetOutput(0)->GetStreamFormat().mSampleRate);
+		client->setSampleRate((int) sampleRate);
 
 		// TODO Check that the stream is Float32, add better error handling.
 		float input[inFramesToProcess * BRIDGE_INPUTS];
 		float output[inFramesToProcess * BRIDGE_OUTPUTS];
 		memset(input, 0, sizeof(input));
 		memset(output, 0, sizeof(output));
-		// Interleave input
-		for (int c = 0; c < (int) inBufferList.mNumberBuffers; c++) {
-			const float *buffer = (const float*) inBufferList.mBuffers[c].mData;
-			for (int i = 0; i < (int) inFramesToProcess; i++) {
-				input[i * BRIDGE_INPUTS + c] = buffer[i];
-			}
-		}
+		// // Interleave input
+		// for (int c = 0; c < (int) inBufferList.mNumberBuffers; c++) {
+		// 	const float *buffer = (const float*) inBufferList.mBuffers[c].mData;
+		// 	for (int i = 0; i < (int) inFramesToProcess; i++) {
+		// 		input[i * BRIDGE_INPUTS + c] = buffer[i];
+		// 	}
+		// }
 		// Process audio
-		// client->processStream(input, output, inFramesToProcess);
+		client->processStream(input, output, inFramesToProcess);
 		// Deinterleave output
-		if (outBufferList.mNumberBuffers >= 1) {
-			AudioBuffer &outBuffer = outBufferList.mBuffers[0];
-			float *buffer = (float*) outBuffer.mData;
-			for (int i = 0; i < (int) inFramesToProcess; i++) {
-				for (int c = 0; c < (int) outBuffer.mNumberChannels; c++) {
-					float r = (float) rand() / RAND_MAX;
-					buffer[i * outBuffer.mNumberChannels + c] = output[i * BRIDGE_OUTPUTS + c] + (r * 2.f - 1.f);
-				}
-			}
-		}
+		// if (outBufferList.mNumberBuffers >= 1) {
+		// 	AudioBuffer &outBuffer = outBufferList.mBuffers[0];
+		// 	float *buffer = (float*) outBuffer.mData;
+		// 	for (int i = 0; i < (int) inFramesToProcess; i++) {
+		// 		for (int c = 0; c < (int) outBuffer.mNumberChannels; c++) {
+		// 			float r = (float) rand() / RAND_MAX;
+		// 			buffer[i * outBuffer.mNumberChannels + c] = output[i * BRIDGE_OUTPUTS + c] + (r * 2.f - 1.f);
+		// 		}
+		// 	}
+		// }
 		return noErr;
 	}
 
@@ -142,7 +174,7 @@ struct BridgeAU : public AUMIDIEffectBase {
 		msg.data1 = inData1;
 		msg.data2 = inData2;
 		client->pushMidi(msg);
-		// log("%02x %02x %02x", msg.cmd, msg.data1, msg.data2);		
+		// log("%02x %02x %02x", msg.cmd, msg.data1, msg.data2);
 		return noErr;
 	}
 };
