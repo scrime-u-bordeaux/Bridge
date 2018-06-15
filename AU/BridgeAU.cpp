@@ -38,7 +38,7 @@ struct BridgeAU : public AUMIDIEffectBase {
 	}
 
 	ComponentResult GetParameterInfo(AudioUnitScope inScope, AudioUnitParameterID inParameterID, AudioUnitParameterInfo &outParameterInfo) override {
-		outParameterInfo.flags = kAudioUnitParameterFlag_IsWritable | kAudioUnitParameterFlag_IsReadable;
+		outParameterInfo.flags = kAudioUnitParameterFlag_IsWritable | kAudioUnitParameterFlag_IsReadable | kAudioUnitParameterFlag_IsHighResolution;
 
 		if (inScope == kAudioUnitScope_Global) {
 			if (inParameterID == 0) {
