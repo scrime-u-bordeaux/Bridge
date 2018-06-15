@@ -19,15 +19,6 @@ struct BridgeAU : public AUMIDIEffectBase {
 		delete client;
 	}
 
-	bool SupportsTail() override {
-		return true;
-	}
-
-	Float64 GetTailTime() override {
-		// 1 year, essentially infinite
-		return (60.0 * 60.0 * 24.0 * 365.0);
-	}
-
 	ComponentResult GetParameterValueStrings(AudioUnitScope inScope, AudioUnitParameterID inParameterID, CFArrayRef *outStrings) override {
 		if (!outStrings)
 			return noErr;
@@ -145,26 +136,59 @@ struct BridgeAU : public AUMIDIEffectBase {
 		float output[inFramesToProcess * BRIDGE_OUTPUTS];
 		memset(input, 0, sizeof(input));
 		memset(output, 0, sizeof(output));
-		// // Interleave input
-		// for (int c = 0; c < (int) inBufferList.mNumberBuffers; c++) {
-		// 	const float *buffer = (const float*) inBufferList.mBuffers[c].mData;
-		// 	for (int i = 0; i < (int) inFramesToProcess; i++) {
-		// 		input[i * BRIDGE_INPUTS + c] = buffer[i];
-		// 	}
-		// }
+
+		// log("%d ins %d outs", inBufferList.mNumberBuffers, outBufferList.mNumberBuffers);
+
+		// Deinterleave input
+		if (inBufferList.mNumberBuffers == 1) {
+			const AudioBuffer &inBuffer = inBufferList.mBuffers[0];
+			const float *buffer = (const float*) inBuffer.mData;
+			for (int i = 0; i < (int) inFramesToProcess; i++) {
+				for (int c = 0; c < (int) inBuffer.mNumberChannels && c < BRIDGE_INPUTS; c++) {
+					input[i * BRIDGE_INPUTS + c] = buffer[i * inBuffer.mNumberChannels + c];
+				}
+			}
+		}
+		else {
+			for (int c = 0; c < (int) inBufferList.mNumberBuffers && c < BRIDGE_INPUTS; c++) {
+				const AudioBuffer &inBuffer = inBufferList.mBuffers[c];
+				const float *buffer = (const float*) inBuffer.mData;
+				for (int i = 0; i < (int) inFramesToProcess; i++) {
+					input[i * BRIDGE_INPUTS + c] = buffer[i];
+				}
+			}
+		}
+
 		// Process audio
 		client->processStream(input, output, inFramesToProcess);
+
 		// Deinterleave output
-		// if (outBufferList.mNumberBuffers >= 1) {
-		// 	AudioBuffer &outBuffer = outBufferList.mBuffers[0];
-		// 	float *buffer = (float*) outBuffer.mData;
-		// 	for (int i = 0; i < (int) inFramesToProcess; i++) {
-		// 		for (int c = 0; c < (int) outBuffer.mNumberChannels; c++) {
-		// 			float r = (float) rand() / RAND_MAX;
-		// 			buffer[i * outBuffer.mNumberChannels + c] = output[i * BRIDGE_OUTPUTS + c] + (r * 2.f - 1.f);
-		// 		}
-		// 	}
-		// }
+		if (outBufferList.mNumberBuffers == 1) {
+			AudioBuffer &outBuffer = outBufferList.mBuffers[0];
+			float *buffer = (float*) outBuffer.mData;
+			for (int i = 0; i < (int) inFramesToProcess; i++) {
+				// Leave outputs >= 8 undefined, since nobody will be using that many (probably)
+				for (int c = 0; c < (int) outBuffer.mNumberChannels && c < BRIDGE_OUTPUTS; c++) {
+					buffer[i * outBuffer.mNumberChannels + c] = output[i * BRIDGE_OUTPUTS + c];
+				}
+			}
+		}
+		else {
+			for (int c = 0; c < (int) outBufferList.mNumberBuffers; c++) {
+				AudioBuffer &outBuffer = outBufferList.mBuffers[c];
+				float *buffer = (float*) outBuffer.mData;
+				if (c < BRIDGE_OUTPUTS) {
+					for (int i = 0; i < (int) inFramesToProcess; i++) {
+						buffer[i] = output[i * BRIDGE_OUTPUTS + c];
+					}
+				}
+				else {
+					memset(buffer, 0, inFramesToProcess * sizeof(float));
+				}
+			}
+		}
+
+		ioActionFlags &= ~kAudioUnitRenderAction_OutputIsSilence;
 		return noErr;
 	}
 

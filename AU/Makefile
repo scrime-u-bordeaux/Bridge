@@ -61,10 +61,13 @@ dist: all
 	cd dist && zip -5 -r VCV-Bridge-$(VERSION)-$(ARCH)-AU.zip $(BUNDLE)
 
 install: dist
-	sudo cp -R dist/$(BUNDLE) /Library/Audio/Plug-Ins/Components/
+	cp -R dist/$(BUNDLE) /Library/Audio/Plug-Ins/Components/
 
 uninstall:
-	sudo rm -rfv /Library/Audio/Plug-Ins/Components/$(BUNDLE)
+	rm -rfv /Library/Audio/Plug-Ins/Components/$(BUNDLE)
 
 val: install
 	auval -v aumf BRDG VCV_ -strict -de
+
+test: val
+	/Applications/Logic\ Pro\ X.app/Contents/MacOS/Logic\ Pro\ X
