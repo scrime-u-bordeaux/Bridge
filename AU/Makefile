@@ -1,4 +1,4 @@
-VERSION = master
+VERSION = 0.6.1
 
 RACK_DIR ?= ../..
 include $(RACK_DIR)/arch.mk

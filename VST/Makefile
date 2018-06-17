@@ -1,4 +1,4 @@
-VERSION = 0.6.1dev
+VERSION = 0.6.1
 
 RACK_DIR ?= ../..
 include $(RACK_DIR)/arch.mk
@@ -45,7 +45,6 @@ clean:
 	rm -rfv build $(TARGET) dist
 
 dist: all
-	rm -rf dist
 ifdef ARCH_MAC
 	mkdir -p dist
 	mkdir -p dist/$(BUNDLE)/Contents
