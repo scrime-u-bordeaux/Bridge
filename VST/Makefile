@@ -17,7 +17,12 @@ ifdef ARCH_MAC
 endif
 ifdef ARCH_WIN
 	LDFLAGS += -shared -static -lws2_32
-	TARGET := $(TARGET).dll
+ifdef ARCH_WIN_64
+	TARGET := $(TARGET)-64.dll
+endif
+ifdef ARCH_WIN_32
+	TARGET := $(TARGET)-32.dll
+endif
 endif
 ifdef ARCH_LIN
 	FLAGS += -D__cdecl=""
