@@ -16,7 +16,11 @@ struct BridgeVST : public AudioEffectX {
 	bool lastPlaying = false;
 
 	BridgeVST(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, 1 + BRIDGE_NUM_PARAMS) {
+#if FX
+		isSynth(false);
+#else
 		isSynth(true);
+#endif
 		setNumInputs(BRIDGE_INPUTS);
 		setNumOutputs(BRIDGE_OUTPUTS);
 
