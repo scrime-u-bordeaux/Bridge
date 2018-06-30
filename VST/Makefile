@@ -54,7 +54,11 @@ dist: all
 ifdef ARCH_MAC
 	mkdir -p dist/$(BUNDLE)
 	mkdir -p dist/$(BUNDLE)/Contents
+ifdef FX
+	cp Info-fx.plist dist/$(BUNDLE)/Contents/Info.plist
+else
 	cp Info.plist dist/$(BUNDLE)/Contents/Info.plist
+endif
 	cp PkgInfo dist/$(BUNDLE)/Contents/
 	mkdir -p dist/$(BUNDLE)/Contents/MacOS
 	cp $(TARGET) dist/$(BUNDLE)/Contents/MacOS/
